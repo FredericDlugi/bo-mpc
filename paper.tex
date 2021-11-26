@@ -36,6 +36,9 @@
 \usepackage{booktabs} % Horizontal rules in tables
 
 \usepackage{lettrine} % The lettrine is the first enlarged letter at the beginning of the text
+\usepackage{algorithm}
+\usepackage[noend]{algpseudocode}
+\usepackage{amsmath}
 
 \usepackage{enumitem} % Customized lists
 \setlist[itemize]{noitemsep} % Make itemize lists more compact
@@ -107,6 +110,22 @@ Bayesian optimization is a strategy for global optimization of backbox functions
 It therefore does not require the computation of gradients, but works best on continuous functions.
 It is best suited for optimizing functions, where each evaluation takes a long time.
 The number of input dimensions for bayesian optimization is typically less then $20$.\cite{frazier2018tutorial}
+
+\begin{algorithm}
+    \caption{Bayesian Optimization}
+    \begin{algorithmic}
+        \State $\text{f} \gets \text{black box function}$
+        \State $\text{initPos} \gets \text{initial positions}$
+        \State $\text{evaluations} \gets \text{f(initPos)}$
+        \State $\alpha \gets \text{calcAquisitionFunction(evaluations)}$
+        \For{$i= 1 \to N$}
+            \State $\text{nextPos} \gets \text{argmax(}\alpha\text{)}$
+            \State $\text{evaluations}.append(\text{f(nextPos)})$
+            \State $\alpha \gets \text{calcAquisitionFunction(evaluations)}$
+        \EndFor
+        \State $result \gets \text{max(evaluations)}$
+    \end{algorithmic}
+\end{algorithm}
 
 \subsection{What is MPC?}
 MPC is an acronym for model predicive control.

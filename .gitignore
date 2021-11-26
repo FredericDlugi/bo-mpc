@@ -7,3 +7,5 @@
 *.out
 *.gz
 ~$*.pptx
+**/__pycache__/*
+BayesianOptimization/*

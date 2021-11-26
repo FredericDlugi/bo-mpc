@@ -38,3 +38,7 @@ class Bicycle():
     @property
     def state(self):
         return np.array([self.xc, self.yc, self.theta, self.delta, self.beta])
+
+    @state.setter
+    def state(self, value):
+        self.xc, self.yc, self.theta, self.delta, self.beta = value

@@ -92,8 +92,8 @@ def run_sim(lr=1.2, lf=0.8):
 
         for i, _ in enumerate(path):
             v, w = controller.optimize(mpc_bike, path[i:i + MPC_HORIZON,:])
-            mpc_bike.step(v, w)
             bike.step(v, w)
+            mpc_bike.state = bike.state
 
             u[i,:] += [v, w]
 

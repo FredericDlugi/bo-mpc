@@ -3,6 +3,7 @@
 from math import sin, cos, tan, atan2
 import numpy as np
 
+
 class Bicycle():
     def __init__(self, lr=1.2, lf=0.8, dt=0.01):
         self.xc = 0
@@ -37,7 +38,7 @@ class Bicycle():
 
     @property
     def state(self):
-        return np.array([self.xc, self.yc, self.theta, self.delta, self.beta])
+        return np.array([self.xc, self.yc, self.theta, self.delta, self.beta]).astype(float)
 
     @state.setter
     def state(self, value):

@@ -4,6 +4,7 @@ import numpy as np
 import copy
 from scipy.optimize import minimize
 
+
 class MpcController:
     def __init__(self):
         self.horiz = None
@@ -43,5 +44,5 @@ class MpcController:
             self.cost, args=(
                 my_car, points), x0=np.zeros(
                 (2 * self.horiz)), method='SLSQP', bounds=bnd)
-        #print(result)
+        # print(result)
         return result.x[0], result.x[1]

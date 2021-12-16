@@ -85,7 +85,7 @@
 \date{\today} % Leave empty to omit a date
 \renewcommand{\maketitlehookd}{%
 \begin{abstract}
-\noindent \blindtext % Dummy abstract text - replace \blindtext with your abstract text
+\noindent When using MPC to control a vehicle it is often neccesary to fine tune vehicle parameter for the model to match reality. This is a time consuming process that often relies on trial and error or grid search of the parameter space. In this paper we evaluate the use of Bayesian Optimization to tackle this problem. We simulate vehicle dynamics of a simple bicycle model with two parameters. We try to find the real vehicle parameters by optimizing controller performance with different parameters using Bayesian Optimization.
 \end{abstract}
 }
 
@@ -106,33 +106,62 @@
 This is done to let you know what I understand when talking about these algorithms.
 
 \subsection{What is Bayesian Optimization?}
-Bayesian optimization is a strategy for global optimization of backbox functions.
+Bayesian optimization is a strategy for global optimization of backbox functions. (Alg. \ref{alg:bo})
 It therefore does not require the computation of gradients, but works best on continuous functions.
 It is best suited for optimizing functions, where each evaluation takes a long time.
-The number of input dimensions for bayesian optimization is typically less then $20$.\cite{frazier2018tutorial}
+The number of input dimensions for bayesian optimization is typically less then $20$. \cite{frazier2018tutorial}
+Bayesian Optimization uses an aquisition function that operates on a gaussian process of the evaluations. In this paper we evaluate three different acquisition functions: Expected Improvement (Alg. \ref{alg:ei}), Probability of Improvement (Alg. \ref{alg:poi}) and Upper Confidence Bound (Alg. \ref{alg:ucb}). We use the Matern ($\nu=2.5$) kernel for all experiments. We also vary the $\alpha$ Parameter of the Gaussian Process to smooth out the cost landscape.
 
 \begin{algorithm}
     \caption{Bayesian Optimization}
+    \label{alg:bo}
     \begin{algorithmic}
         \State $\text{f} \gets \text{black box function}$
         \State $\text{initPos} \gets \text{initial positions}$
         \State $\text{evaluations} \gets \text{f(initPos)}$
-        \State $\alpha \gets \text{calcAquisitionFunction(evaluations)}$
         \For{$i= 1 \to N$}
+            \State $\alpha \gets \text{acquisitionFunction(evaluations)}$
             \State $\text{nextPos} \gets \text{argmax(}\alpha\text{)}$
             \State $\text{evaluations}.append(\text{f(nextPos)})$
-            \State $\alpha \gets \text{calcAquisitionFunction(evaluations)}$
         \EndFor
         \State $result \gets \text{max(evaluations)}$
     \end{algorithmic}
 \end{algorithm}
 
+\begin{algorithm}
+    \caption{Expected Improvement}
+    \label{alg:ei}
+    \begin{algorithmic}
+        \State $\mu, \sigma \gets \text{gp.predict(x)}$
+        \State $z \gets (\mu - y_{max} - xi)/\sigma$
+        \State $result \gets (\mu - y_{max} - xi) * \text{cdf(z)} + \sigma * \text{pdf(z)}$
+    \end{algorithmic}
+\end{algorithm}
+
+\begin{algorithm}
+    \caption{Probability of Improvement}
+    \label{alg:poi}
+    \begin{algorithmic}
+        \State $\mu, \sigma \gets \text{gp.predict(x)}$
+        \State $z \gets (\mu - y_{max} - xi)/\sigma$
+        \State $result \gets \text{cdf(z)}$
+    \end{algorithmic}
+\end{algorithm}
+
+\begin{algorithm}
+    \caption{Upper Confidence Bound}
+    \label{alg:ucb}
+    \begin{algorithmic}
+        \State $\mu, \sigma \gets \text{gp.predict(x)}$
+        \State $result \gets \mu + \kappa * \sigma$
+    \end{algorithmic}
+\end{algorithm}
+
 \subsection{What is MPC?}
 MPC is an acronym for model predicive control.
-It replaces classical control algorithms that usually work in an offline manner with an optimizer,
-that solves the optimal control problem for a receding horizon (Figure \ref{fig:mpc}).
+It replaces classical control algorithms that usually work in an offline manner with an optimizer, that solves the optimal control problem for a receding horizon (Figure \ref{fig:mpc}).
 Each action taken is the first action of the optimal control plan.
-The plan gets updated continuously (Figure \ref{fig:mpc_plan}).
+The plan gets updated continuously (Figure \ref{fig:mpc_plan}), this is called receding horizon approach.
 
 \begin{figure}[h]
     \caption{Blockdiagram of MPC algorithm}
@@ -148,70 +177,42 @@ The plan gets updated continuously (Figure \ref{fig:mpc_plan}).
     \label{fig:mpc_plan}
 \end{figure}
 
-%------------------------------------------------
+\subsection{Kinematic Bicycle Model}
 
-\section{Methods}
+We use a kinematic bicycle model defined by algorithm \ref{alg:kbm} and \ref{alg:ubm}. We try to estimate the $L_r$ and $L_f$ in this paper.
+\begin{algorithm}
+    \caption{Kinematic Bicycle Model}
+    \label{alg:kbm}
+    \begin{algorithmic}
+        \State $v \gets \text{speed (input)}$
+        \State $\omega \gets \text{steering angle rate (input)}$
+        \State $x_c, y_c \gets \text{center position}$
+        \State $\theta \gets \text{absolute angle}$
+        \State $\delta \gets \text{steering angle}$
+        \State $\beta \gets \text{side slip factor}$
+        \State $L_r \gets \text{Distance center to rear wheel}$
+        \State $L_f \gets \text{Distance center to font wheel}$
+        \State $L \gets L_r + L_f$
+    \end{algorithmic}
+\end{algorithm}
 
-Maecenas sed ultricies felis. Sed imperdiet dictum arcu a egestas.
-\begin{itemize}
-\item Donec dolor arcu, rutrum id molestie in, viverra sed diam
-\item Curabitur feugiat
-\item turpis sed auctor facilisis
-\item arcu eros accumsan lorem, at posuere mi diam sit amet tortor
-\item Fusce fermentum, mi sit amet euismod rutrum
-\item sem lorem molestie diam, iaculis aliquet sapien tortor non nisi
-\item Pellentesque bibendum pretium aliquet
-\end{itemize}
-\blindtext % Dummy text
+\begin{algorithm}
+    \caption{Update Bicycle Model}
+    \label{alg:ubm}
+    \begin{algorithmic}
+        \State $\dot{x_c} \gets v * \cos{(\theta + \beta)}$
+        \State $\dot{y_c} \gets v * \sin{(\theta + \beta)}$
+        \State $\dot{\theta} \gets v * \cos{(\beta)} * \tan{(\delta)} / L$
+        \State $\dot{\delta} \gets \omega$
+        \State $\beta \gets \text{atan2}(L_r * \tan{(\delta)}, L)$
+    \end{algorithmic}
+\end{algorithm}
 
-Text requiring further explanation\footnote{Example footnote}.
+\section{Experiments}
 
-%------------------------------------------------
+Experiment Setup
 
-\section{Results}
-
-\begin{table}
-\caption{Example table}
-\centering
-\begin{tabular}{llr}
-\toprule
-\multicolumn{2}{c}{Name} \\
-\cmidrule(r){1-2}
-First name & Last Name & Grade \\
-\midrule
-John & Doe & $7.5$ \\
-Richard & Miles & $2$ \\
-\bottomrule
-\end{tabular}
-\end{table}
-
-\blindtext % Dummy text
-
-\begin{equation}
-\label{eq:emc}
-e = mc^2
-\end{equation}
-
-\blindtext % Dummy text
-
-%------------------------------------------------
-
-\section{Discussion}
-
-\subsection{Subsection One}
-
-A statement requiring citation \cite{sorourifar2021data}.
-\blindtext % Dummy text
-
-\subsection{Subsection Two}
-
-\blindtext % Dummy text
-
-%----------------------------------------------------------------------------------------
-%	REFERENCE LIST
-%----------------------------------------------------------------------------------------
 \bibliographystyle{plain}
 \bibliography{refs.bib}
-%----------------------------------------------------------------------------------------
 
 \end{document}

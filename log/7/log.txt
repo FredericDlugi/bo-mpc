@@ -1,4 +1,3 @@
-
 main.py --acq poi --acq_xi 0.1 --measured_states 0 1 2 3 4
 |   iter    |  target   |    lf     |    lr     |
 -------------------------------------------------

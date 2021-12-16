@@ -1,4 +1,4 @@
-python.exe .\src\main.py --acq poi --acq_xi 0.1
+main.py --acq poi --acq_xi 0.1
 |   iter    |  target   |    lf     |    lr     |
 -------------------------------------------------
 |  1        | -55.23    |  0.917    |  1.22     |

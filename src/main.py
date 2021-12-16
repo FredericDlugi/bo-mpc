@@ -24,18 +24,21 @@ def plot_bo(f, bo):
 
 parser = argparse.ArgumentParser(
     description="Run BO on an MPC problem to find L_f and L_r params.")
+
 parser.add_argument(
     "--target_lf",
     "-tlf",
     help="Target value for L_f",
     default=1.2,
     type=float)
+
 parser.add_argument(
     "--target_lr",
     "-tlr",
     help="Target value for L_r",
     default=0.8,
     type=float)
+
 parser.add_argument(
     "--bounds",
     "-b",
@@ -45,11 +48,13 @@ parser.add_argument(
         0.5,
         1.5],
     type=float)
+
 parser.add_argument(
     "--n_iter",
     help="Number of iterations of BO",
     default=50,
     type=int)
+
 parser.add_argument(
     "--acq",
     help="Acquisition function of BO (ei, ucb or poi)",
@@ -70,14 +75,48 @@ parser.add_argument(
     "--measured_states",
     help="Measure theses states from actual controller (0-4)",
     nargs="*",
-    default=[0,1],
+    default=[0, 1],
     type=int)
 
 parser.add_argument(
-    "--num_references",
-    help="Number of references per evaluation",
+    "--track_waypoints",
+    help="Number of waypoints per track",
+    default=7,
+    type=int)
+
+parser.add_argument(
+    "--track_bounds",
+    nargs=2,
+    help="Track bounds",
+    default=[
+        0.,
+        5.],
+    type=float)
+
+parser.add_argument(
+    "--track_num_points",
+    help="Number of points per track",
+    default=200,
+    type=int)
+
+parser.add_argument(
+    "--track_seeds",
+    help="Seeds of points per track",
+    nargs="+",
+    default=[18806, 58798, 90297],
+    type=int)
+
+parser.add_argument(
+    "--track_num",
+    help="Number of tracks per evaluation (ignored if track_seeds != default)",
     default=3,
     type=int)
+
+parser.add_argument(
+    "--gp_alpha",
+    help="Alpha value for GP",
+    default=1e-6,
+    type=float)
 
 args = parser.parse_args()
 
@@ -85,10 +124,16 @@ bounds = (args.bounds[0], args.bounds[1])
 
 measured_states = args.measured_states
 
-sim = Simulation(measured_states=args.measured_states, tlr=args.target_lr, tlf=args.target_lf, num_ref=args.num_references)
+sim = Simulation(
+    measured_states=args.measured_states,
+    tlr=args.target_lr,
+    tlf=args.target_lf,
+    track_waypoints=args.track_waypoints,
+    track_bounds=args.track_bounds,
+    track_num_points=args.track_num_points,
+    track_seeds=args.track_seeds)
 
 def f(lr, lf): return sim.run(lr, lf)
-
 
 bo = BayesianOptimization(
     f=f,
@@ -96,4 +141,10 @@ bo = BayesianOptimization(
         "lr": bounds,
         "lf": bounds},
     random_state=1)
-bo.maximize(n_iter=args.n_iter, acq=args.acq, xi=args.acq_xi, kappa=args.acq_kappa)
+
+bo.set_gp_params(alpha=args.gp_alpha)
+bo.maximize(
+    n_iter=args.n_iter,
+    acq=args.acq,
+    xi=args.acq_xi,
+    kappa=args.acq_kappa)

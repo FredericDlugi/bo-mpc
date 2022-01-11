@@ -9,3 +9,4 @@
 ~$*.pptx
 **/__pycache__/*
 BayesianOptimization/*
+log/*

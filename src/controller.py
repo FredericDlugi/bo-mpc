@@ -6,13 +6,10 @@ from scipy.optimize import minimize
 
 
 class MpcController:
-    def __init__(self):
+    def __init__(self, input_cost_ratio):
         self.horiz = None
-        self.R = np.diag([0.01, 0.01])                 # input cost matrix
-        # input difference cost matrix
-        self.Rd = np.diag([0.01, 0.01])
-        self.Q = np.diag([1.0, 1.0])                   # state cost matrix
-        self.Qf = self.Q                               # state final matrix
+        self.R = np.diag([input_cost_ratio, input_cost_ratio])  # input cost matrix
+        self.Q = np.diag([1.0, 1.0])                            # state cost matrix
 
     def cost(
             self,
@@ -33,8 +30,6 @@ class MpcController:
             z_k[1, i] = mpc_car.yc
             cost += np.sum(self.R @ (u_k[:, i]**2))
             cost += np.sum(self.Q @ ((desired_state[:, i] - z_k[:, i])**2))
-            if i < (self.horiz - 1):
-                cost += np.sum(self.Rd @ ((u_k[:, i + 1] - u_k[:, i])**2))
         return cost
 
     def optimize(self, my_car: Bicycle, points: np.ndarray):
@@ -44,5 +39,4 @@ class MpcController:
             self.cost, args=(
                 my_car, points), x0=np.zeros(
                 (2 * self.horiz)), method='SLSQP', bounds=bnd)
-        # print(result)
         return result.x[0], result.x[1]

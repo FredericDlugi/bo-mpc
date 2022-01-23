@@ -1,16 +1,30 @@
 
 from models.kinematric_bicycle_model import Bicycle
 from controller import MpcController
-from path.path_generation import generate_random_path, generate_path
+from path.path_generation import generate_path
 from matplotlib import pyplot as plt
 import numpy as np
 from numpy import random
 import copy
 import pathlib
 import os
-from multiprocessing import Pool
+from dataclasses import dataclass
 import warnings
 warnings.filterwarnings("ignore", category=RuntimeWarning)
+
+@dataclass(init=True)
+class SimulationData:
+    seed: int
+    path : np.ndarray
+    path_contoller : np.ndarray
+    reference : np.ndarray
+    inputs : np.ndarray
+    measured_states : np.ndarray
+    tlf : float = 0.
+    tlr : float = 0.
+    lf : float = 0.
+    lr : float = 0.
+    input_ratio : float = 0.
 
 
 class Simulation:

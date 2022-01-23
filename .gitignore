@@ -10,3 +10,5 @@
 **/__pycache__/*
 BayesianOptimization/*
 log/*
+build/*
+*egg-info*

@@ -57,7 +57,7 @@
 \pagestyle{fancy} % All pages have headers and footers
 \fancyhead{} % Blank out the default header
 \fancyfoot{} % Blank out the default footer
-\fancyhead[C]{Running title $\bullet$ May 2016 $\bullet$ Vol. XXI, No. 1} % Custom header text
+\fancyhead[C]{Bayesian Optimization in Model Predictive Control $\bullet$ Frederic Dlugi $\bullet$ January 2022} % Custom header text
 \fancyfoot[RO,LE]{\thepage} % Custom footer text
 
 \usepackage{titling} % Customizing the title section
@@ -72,7 +72,7 @@
 
 \pretitle{\begin{center}\Huge\bfseries} % Article title formatting
 \posttitle{\end{center}} % Article title closing formatting
-\title{Baysian Optimization in MPC} % Article title
+\title{Bayesian Optimization in Model Predictive Control} % Article title
 \author{%
 \textsc{Frederic Dlugi}\\[1ex] % Your name
 \normalsize Universität zu Lübeck \\ % Your institution
@@ -85,7 +85,7 @@
 \date{\today} % Leave empty to omit a date
 \renewcommand{\maketitlehookd}{%
 \begin{abstract}
-\noindent When using MPC to control a vehicle it is often neccesary to fine tune vehicle parameter for the model to match reality. This is a time consuming process that often relies on trial and error or grid search of the parameter space. In this paper we evaluate the use of Bayesian Optimization to tackle this problem. We simulate vehicle dynamics of a simple bicycle model with two parameters. We try to find the real vehicle parameters by optimizing controller performance with different parameters using Bayesian Optimization.
+\noindent When using MPC to control a vehicle it is often neccesary to fine tune control and vehicle parameters to get good performance in reality. This is a time consuming process that often relies on trial and error or grid search of the parameter space. In this paper we evaluate the use of Bayesian Optimization to tackle this problem. We simulate vehicle dynamics of a simple bicycle model with two parameters. We try to find the MPC cost ratios and real vehicle parameters by optimizing controller performance with different parameters using Bayesian Optimization.
 \end{abstract}
 }
 
@@ -109,7 +109,7 @@ This is done to let you know what I understand when talking about these algorith
 Bayesian optimization is a strategy for global optimization of backbox functions. (Alg. \ref{alg:bo})
 It therefore does not require the computation of gradients, but works best on continuous functions.
 It is best suited for optimizing functions, where each evaluation takes a long time.
-The number of input dimensions for bayesian optimization is typically less then $20$. \cite{frazier2018tutorial}
+The number of input dimensions for bayesian optimization is typically less then $20$ \cite{frazier2018tutorial}.
 Bayesian Optimization uses an aquisition function that operates on a gaussian process of the evaluations. In this paper we evaluate three different acquisition functions: Expected Improvement (Alg. \ref{alg:ei}), Probability of Improvement (Alg. \ref{alg:poi}) and Upper Confidence Bound (Alg. \ref{alg:ucb}). We use the Matern ($\nu=2.5$) kernel for all experiments. We also vary the $\alpha$ Parameter of the Gaussian Process to smooth out the cost landscape.
 
 \begin{algorithm}
@@ -179,14 +179,15 @@ The plan gets updated continuously (Figure \ref{fig:mpc_plan}), this is called r
 
 \subsection{Kinematic Bicycle Model}
 
-We use a kinematic bicycle model defined by algorithm \ref{alg:kbm} and \ref{alg:ubm}. We try to estimate the $L_r$ and $L_f$ in this paper.
+We use a kinematic bicycle model defined by algorithm \ref{alg:kbm} and \ref{alg:ubm} \cite{kinematicBicycleModel}. We try to estimate the $L_r$ and $L_f$ in this paper.
 \begin{algorithm}
     \caption{Kinematic Bicycle Model}
     \label{alg:kbm}
     \begin{algorithmic}
-        \State $v \gets \text{speed (input)}$
+        \State $a \gets \text{accelaration (input)}$
         \State $\omega \gets \text{steering angle rate (input)}$
         \State $x_c, y_c \gets \text{center position}$
+        \State $v \gets \text{speed}$
         \State $\theta \gets \text{absolute angle}$
         \State $\delta \gets \text{steering angle}$
         \State $\beta \gets \text{side slip factor}$
@@ -200,6 +201,7 @@ We use a kinematic bicycle model defined by algorithm \ref{alg:kbm} and \ref{alg
     \caption{Update Bicycle Model}
     \label{alg:ubm}
     \begin{algorithmic}
+        \State $\dot{v} \gets a$
         \State $\dot{x_c} \gets v * \cos{(\theta + \beta)}$
         \State $\dot{y_c} \gets v * \sin{(\theta + \beta)}$
         \State $\dot{\theta} \gets v * \cos{(\beta)} * \tan{(\delta)} / L$
@@ -208,9 +210,41 @@ We use a kinematic bicycle model defined by algorithm \ref{alg:kbm} and \ref{alg
     \end{algorithmic}
 \end{algorithm}
 
+\section{State of the art}
+In Multi-Objective Optimization of a Path-following MPC for Vehicle Guidance \cite{gharib2021multi} BO was used to weight error terms to find the ratio results in the best reference tracking performance of a complex vehicle model in a simulation. Using BO with expected improvement as acquisition function. They found the BO algorithm used to be more efficient then random search when comparing the number of evaluations needed to find satisfactory results.
+
+Lukas Hewing and colaborators \cite{hewing2018cautious} explored the use of BO to decrease model missmatch. They learned a dynamics model of a miniature race car using a gaussian process from real data, while the vehicle is controlled through MPC. They experimented with sparse approximations to gaussian processes to use them in real-time applications.
+
+What papers did similar things?
+What where their problems?
+What did they achieve?
+What do we do differently?
+
 \section{Experiments}
 
-Experiment Setup
+In this paper we explore two uses of BO in the MPC context. First we try to find the optimal ratio between input (accelaration and steering angle rate) cost and reference tracking ($x - x_{ref}$ and $y - y_{ref}$). Secondly we try to find vehicle specific parameters using BO.
+\subsection{Experiment setup}
+Show specific MPC implementation. Optimizer used is scipys SLSQP.
+Show cost function
+Show setup with graph
+Show generate function
+Name number of evaluations per BO step and number of BO steps.
+
+\subsection{Exploring MPC cost ratio using BO}
+Compare different acquisition functions.
+Cost ratio was explored with different vehicle parameters (show different gaussian processes)
+
+\subsection{Finding Vehicle parameters using BO}
+Using different target parameters
+Using different acquisition functions
+Show main target (1.2, 0.8) -> accumulate all evaluations in one gaussian process
+
+\section{Conclusion}
+There is no general ratio between input and reference cost. It depends on vehicle parameters. The optimal ratio is still similar.
+Finetuning still required. Using many different reference tracks, leads to better results.
+
+\section{Further research}
+Use more suffisticated MPC. Try more hyper parameters. Try if this works on real hardware or using one simple and one complex vehicle model. Try measuring more or less vehicle states. Add uncertency to measurents and model.
 
 \bibliographystyle{plain}
 \bibliography{refs.bib}

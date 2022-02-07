@@ -210,11 +210,14 @@ We use a kinematic bicycle model defined by algorithm \ref{alg:kbm} and \ref{alg
     \end{algorithmic}
 \end{algorithm}
 
-\section{State of the art}
-In Multi-Objective Optimization of a Path-following MPC for Vehicle Guidance \cite{gharib2021multi} BO was used to weight error terms to find the ratio results in the best reference tracking performance of a complex vehicle model in a simulation. Using BO with expected improvement as acquisition function. They found the BO algorithm used to be more efficient then random search when comparing the number of evaluations needed to find satisfactory results.
+\section{Literatur review}
+In Multi-Objective Optimization of a Path-following MPC for Vehicle Guidance \cite{gharib2021multi} BO is used to weight error terms to find the ratio results in the best reference tracking performance of a complex vehicle model in a simulation. Using BO with expected improvement as acquisition function. They found the BO algorithm used to be more efficient then random search when comparing the number of evaluations needed to find satisfactory results.
 
 Lukas Hewing and colaborators \cite{hewing2018cautious} explored the use of BO to decrease model missmatch. They learned a dynamics model of a miniature race car using a gaussian process from real data, while the vehicle is controlled through MPC. They experimented with sparse approximations to gaussian processes to use them in real-time applications.
 
+Lu Qiugang and colaborators \cite{lu2020mpc} explored MPC parameter tuning in HVAC plants. They had good results and with limited evaluations. They used upper confidence bound as acquisition function and also had two tuning parameters. The experiment setup is similar to the one used in this paper.
+
+% Do i need more here?
 What papers did similar things?
 What where their problems?
 What did they achieve?
@@ -223,12 +226,33 @@ What do we do differently?
 \section{Experiments}
 
 In this paper we explore two uses of BO in the MPC context. First we try to find the optimal ratio between input (accelaration and steering angle rate) cost and reference tracking ($x - x_{ref}$ and $y - y_{ref}$). Secondly we try to find vehicle specific parameters using BO.
+
 \subsection{Experiment setup}
+Show block diagram for both experiments. (Show setup with graph)
 Show specific MPC implementation. Optimizer used is scipys SLSQP.
 Show cost function
-Show setup with graph
 Show generate function
 Name number of evaluations per BO step and number of BO steps.
+
+To generate the path, we first generate random normal distributed inputs. Then we use the Bicycle model with real $L_r$ and $L_f$ values with these inputs to generate $N$ sequential positions.
+\begin{algorithm}
+    \caption{Generate Path}
+    \label{alg:path_gen}
+    \begin{algorithmic}
+        \State $L_r \gets \text{Distance center to rear wheel}$
+        \State $L_f \gets \text{Distance center to font wheel}$
+        \State $\text{initPos} \gets (0,0)$
+        \State $\text{N} \gets \text{Number of path points}$
+        \State $\text{bike} \gets \text{Bike(}L_r, L_f, \text{initPos}\text{)}$
+        \State $\text{inputs} \gets normalDistibutedArray(N - 1, 2)$
+        \State $\text{path} \gets zeroArray(N, 2)$
+        \For{$i= 1 \to (N-1)$}
+            \State $\text{bike}.step(\text{inputs[i - 1]})$
+            \State $\text{path[i]} \gets \text{bike}.getPosition()$
+        \EndFor
+        \State $return \text{ path}$
+    \end{algorithmic}
+\end{algorithm}
 
 \subsection{Exploring MPC cost ratio using BO}
 Compare different acquisition functions.
@@ -239,11 +263,10 @@ Using different target parameters
 Using different acquisition functions
 Show main target (1.2, 0.8) -> accumulate all evaluations in one gaussian process
 
-\section{Conclusion}
+\section{Conclusion and further research}
 There is no general ratio between input and reference cost. It depends on vehicle parameters. The optimal ratio is still similar.
 Finetuning still required. Using many different reference tracks, leads to better results.
 
-\section{Further research}
 Use more suffisticated MPC. Try more hyper parameters. Try if this works on real hardware or using one simple and one complex vehicle model. Try measuring more or less vehicle states. Add uncertency to measurents and model.
 
 \bibliographystyle{plain}

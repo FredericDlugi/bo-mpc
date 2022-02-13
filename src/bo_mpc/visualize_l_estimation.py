@@ -2,9 +2,20 @@ from visualize_gp import visualize_2d
 import json
 from matplotlib import pyplot as plt
 import numpy as np
+import argparse
+import os
 
-if __name__ == "__main__":
-    json_file = open("logs.json")
+def directory(path):
+    if not os.path.isdir(path) and os.path.isfile(os.path.join(path, "logs.json")):
+        raise argparse.ArgumentTypeError(f"{path} is not a valid directory")
+    return path
+
+def main():
+    parser = argparse.ArgumentParser(prog="Visualize Cost Ratio Experiments")
+    parser.add_argument("path", type=directory)
+    args = parser.parse_args()
+
+    json_file = open(os.path.join(args.path, "logs.json"))
 
     x = []
     y = []
@@ -20,3 +31,6 @@ if __name__ == "__main__":
     plt.xlabel("$L_f$")
     plt.ylabel("$L_r$")
     plt.show()
+
+if __name__ == "__main__":
+    main()

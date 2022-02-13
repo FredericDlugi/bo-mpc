@@ -133,8 +133,8 @@ Bayesian Optimization uses an aquisition function that operates on a gaussian pr
     \label{alg:ei}
     \begin{algorithmic}
         \State $\mu, \sigma \gets \text{gp.predict(x)}$
-        \State $z \gets (\mu - y_{max} - xi)/\sigma$
-        \State $result \gets (\mu - y_{max} - xi) * \text{cdf(z)} + \sigma * \text{pdf(z)}$
+        \State $z \gets (\mu - y_{max} - \xi)/\sigma$
+        \State $result \gets (\mu - y_{max} - \xi) * \text{cdf(z)} + \sigma * \text{pdf(z)}$
     \end{algorithmic}
 \end{algorithm}
 
@@ -143,7 +143,7 @@ Bayesian Optimization uses an aquisition function that operates on a gaussian pr
     \label{alg:poi}
     \begin{algorithmic}
         \State $\mu, \sigma \gets \text{gp.predict(x)}$
-        \State $z \gets (\mu - y_{max} - xi)/\sigma$
+        \State $z \gets (\mu - y_{max} - \xi)/\sigma$
         \State $result \gets \text{cdf(z)}$
     \end{algorithmic}
 \end{algorithm}
@@ -217,24 +217,47 @@ Lukas Hewing and colaborators \cite{hewing2018cautious} explored the use of BO t
 
 Lu Qiugang and colaborators \cite{lu2020mpc} explored MPC parameter tuning in HVAC plants. They had good results and with limited evaluations. They used upper confidence bound as acquisition function and also had two tuning parameters. The experiment setup is similar to the one used in this paper.
 
-% Do i need more here?
-What papers did similar things?
-What where their problems?
-What did they achieve?
-What do we do differently?
 
 \section{Experiments}
 
 In this paper we explore two uses of BO in the MPC context. First we try to find the optimal ratio between input (accelaration and steering angle rate) cost and reference tracking ($x - x_{ref}$ and $y - y_{ref}$). Secondly we try to find vehicle specific parameters using BO.
 
 \subsection{Experiment setup}
-Show block diagram for both experiments. (Show setup with graph)
-Show specific MPC implementation. Optimizer used is scipys SLSQP.
-Show cost function
-Show generate function
-Name number of evaluations per BO step and number of BO steps.
 
-To generate the path, we first generate random normal distributed inputs. Then we use the Bicycle model with real $L_r$ and $L_f$ values with these inputs to generate $N$ sequential positions.
+We explore two uses of BO for MPC. Firstly we try to find the optimal ratio of input cost to state cost ratio (See Fig. \ref{fig:ratio_experiment}). Secondly we estimate $L_r$ and $L_f$ parameters of our controller (See Fig. \ref{fig:l_value_experiment}).
+
+\begin{figure}[h]
+    \caption{Ratio experiment}
+    \centering
+    \includegraphics[width=0.45\textwidth]{fig_ratio_experiment.pdf}
+    \label{fig:ratio_experiment}
+\end{figure}
+
+\begin{figure}[h]
+    \caption{L-Value experiment}
+    \centering
+    \includegraphics[width=0.45\textwidth]{fig_l_value_experiment.pdf}
+    \label{fig:l_value_experiment}
+\end{figure}
+
+We used a standard MPC implementation that uses the cost function that is specified here (Alg. \ref{alg:cost_function}). We use scipys SLSQP optimizer to minimize the cost function.
+\begin{algorithm}
+    \caption{Cost function}
+    \label{alg:cost_function}
+    \begin{algorithmic}
+        \State $U \gets \text{Array of inputs } (N \times 2)$
+        \State $X \gets \text{Array of postions } (N \times 2)$
+        \State $X_{ref} \gets \text{Array of reference postions } (N \times 2)$
+
+        \For{$i = 0 \to (N-1)$}
+            \State $cost + (X[i] - X_{ref}[i])^T Q (X[i] - X_{ref}[i])$
+            \State $cost + U[i]^T R U[i]$
+        \EndFor
+        \State $return \text{ cost}$
+    \end{algorithmic}
+\end{algorithm}
+
+To generate the path, we first generate random normal distributed inputs. Then we use the Bicycle model with real $L_r$ and $L_f$ values with these inputs to generate $N$ sequential positions (See Alg. \ref{alg:path_gen}). We use $200$ steps for all paths and all experiments.
 \begin{algorithm}
     \caption{Generate Path}
     \label{alg:path_gen}
@@ -255,19 +278,42 @@ To generate the path, we first generate random normal distributed inputs. Then w
 \end{algorithm}
 
 \subsection{Exploring MPC cost ratio using BO}
-Compare different acquisition functions.
-Cost ratio was explored with different vehicle parameters (show different gaussian processes)
+
+In this experiment we aim to find the optimal ratio between the $Q$ and $R$ matrix in the cost function (Alg \ref{alg:cost_function}). We try this for different vehicles that are differentiated in their L-parameter. Since a full search of the ratios shows that Ratios between $0.001$ and $0.003$ result in better performance (See Figure \ref{fig:cost_ratio_full}). Therefore we explore only this range in all further experiments. We use $40$ tracks per step and do $30$ steps for both experiments. Increasing the regularization $\alpha$ parameter of the internal GP for BO to $0.01$ improved performance.
+
+\begin{figure}[h]
+    \caption{GP of full cost ratio search (Higher is better)}
+    \centering
+    \includegraphics[width=0.45\textwidth]{fig_cost_ratio_full.pdf}
+    \label{fig:cost_ratio_full}
+\end{figure}
+
+\begin{figure}[h]
+    \caption{GP of detailed cost ratio search (Higher is better)}
+    \centering
+    \includegraphics[width=0.45\textwidth]{fig_cost_ratio_detail.pdf}
+    \label{fig:cost_ratio_detail}
+\end{figure}
+
+We found that the optimum ratio for all tested vehicles all with a length of $2m$ is close to $0.002$ (See Fig \ref{fig:cost_ratio_detail}). This is highly depended on the MPC implementation and vehicle dynamics.
 
 \subsection{Finding Vehicle parameters using BO}
-Using different target parameters
-Using different acquisition functions
-Show main target (1.2, 0.8) -> accumulate all evaluations in one gaussian process
+
+We aim to find the vehicle specific parameters $L_f$ and $L_r$ using BO. We try multiple parameters and different aquisition functions. Since evaluating $40$ tracks still lead to noisy cost we need to choose a suitable exploration-exploitation parameter in our acquisition function. For Expected Improvement \ref{alg:ei} and Probability of Improvement \ref{alg:poi} a $\xi = 0.5$ worked the best. For Upper Confidence Bound a $\kappa=2.576$ worked the best. Increasing the regularization $\alpha$ parameter of the internal GP for BO to $0.1$ improved performance.
+
+\begin{figure}[h]
+    \caption{Mean of GP from L-parameter search (Target $L_f = 0.8$ $L_r = 1.2$)}
+    \centering
+    \includegraphics[width=0.45\textwidth]{fig_l_estimation_full.pdf}
+    \label{fig:l_param_full}
+\end{figure}
 
 \section{Conclusion and further research}
-There is no general ratio between input and reference cost. It depends on vehicle parameters. The optimal ratio is still similar.
-Finetuning still required. Using many different reference tracks, leads to better results.
+There is no general ratio between input and reference cost. It depends on vehicle dynamics vehicle parameters and the specific MPC implementation. The optimal ratio are still similar and close to $0.002$ with our experiment. Therefore finetuning is still required and using many different reference tracks, leads to better results.\\
 
-Use more suffisticated MPC. Try more hyper parameters. Try if this works on real hardware or using one simple and one complex vehicle model. Try measuring more or less vehicle states. Add uncertency to measurents and model.
+Finding the vehicle parameters works well using BO if you tweak the BO parameter for exploration and exploitation tradeoff and set the regularization parameter of the internal GP for the BO to a suitable value.\\
+
+In further reseach we would use a more suffisticated MPC since using the SLSQP optimizer from python does not work well for some states. It would also be interesting to try to find more vehicle parameters. Also we would like to try if the BO approach works on real hardware or using one simple and one complex vehicle model this could also be done in simulation by using different vehicle models for the controller and the simulation. In this paper we always measure the current vehicle position and update this inside the controller therefore measuring more or less vehicle states and the effects on the optimization performance would be interesting. To translate this approach to a real vehicle you would need to add uncertency to measurents and to the model.
 
 \bibliographystyle{plain}
 \bibliography{refs.bib}

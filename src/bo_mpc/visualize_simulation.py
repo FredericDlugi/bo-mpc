@@ -16,7 +16,7 @@ def load_from_file(file) -> SimulationData:
     seed_re = "sim(\\d+).npz"
     seed = int(re.search(seed_re, file).group(1))
     if "l_estimation" in file:
-        l_re = re.search("l_estimation_(\\d+\\.\\d+)_(\\d+\\.\\d+)\\\\(\\d+\\.\\d+)_(\\d+\\.\\d+)", file)
+        l_re = re.search("l_estimation_(\\d+\\.\\d+)_(\\d+\\.\\d+).*\\\\(\\d+\\.\\d+)_(\\d+\\.\\d+)", file)
         tlr = float(l_re.group(1))
         tlf = float(l_re.group(2))
         lr = float(l_re.group(4))

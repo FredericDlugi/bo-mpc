@@ -40,6 +40,8 @@
 \usepackage[noend]{algpseudocode}
 \usepackage{amsmath}
 
+\usepackage{todonotes}
+
 \usepackage{enumitem} % Customized lists
 \setlist[itemize]{noitemsep} % Make itemize lists more compact
 
@@ -85,7 +87,7 @@
 \date{\today} % Leave empty to omit a date
 \renewcommand{\maketitlehookd}{%
 \begin{abstract}
-\noindent When using MPC to control a vehicle it is often neccesary to fine tune control and vehicle parameters to get good performance in reality. This is a time consuming process that often relies on trial and error or grid search of the parameter space. In this paper we evaluate the use of Bayesian Optimization to tackle this problem. We simulate vehicle dynamics of a simple bicycle model with two parameters. We try to find the MPC cost ratios and real vehicle parameters by optimizing controller performance with different parameters using Bayesian Optimization.
+\noindent When using MPC to control a vehicle it is often necessary to fine tune control and vehicle parameters to get good performance in reality. This is a time consuming process that often relies on trial and error or grid search of the parameter space. In this paper we evaluate the use of Bayesian Optimization to tackle this problem. We simulate vehicle dynamics of a simple bicycle model with two parameters. We try to find the MPC cost ratios and real vehicle parameters by optimizing controller performance with different parameters using Bayesian Optimization.
 \end{abstract}
 }
 
@@ -106,11 +108,11 @@
 This is done to let you know what I understand when talking about these algorithms.
 
 \subsection{What is Bayesian Optimization?}
-Bayesian optimization is a strategy for global optimization of backbox functions. (Alg. \ref{alg:bo})
+Bayesian optimization is a strategy for global optimization of black-box functions. (Alg. \ref{alg:bo})
 It therefore does not require the computation of gradients, but works best on continuous functions.
 It is best suited for optimizing functions, where each evaluation takes a long time.
 The number of input dimensions for bayesian optimization is typically less then $20$ \cite{frazier2018tutorial}.
-Bayesian Optimization uses an aquisition function that operates on a gaussian process of the evaluations. In this paper we evaluate three different acquisition functions: Expected Improvement (Alg. \ref{alg:ei}), Probability of Improvement (Alg. \ref{alg:poi}) and Upper Confidence Bound (Alg. \ref{alg:ucb}). We use the Matern ($\nu=2.5$) kernel for all experiments. We also vary the $\alpha$ Parameter of the Gaussian Process to smooth out the cost landscape.
+Bayesian Optimization uses an acquisition function that operates on a gaussian process of the evaluations. In this paper we evaluate three different acquisition functions: Expected Improvement (Alg. \ref{alg:ei}), Probability of Improvement (Alg. \ref{alg:poi}) and Upper Confidence Bound (Alg. \ref{alg:ucb}). We use the Matern ($\nu=2.5$) kernel for all experiments. We also vary the $\alpha$ Parameter of the Gaussian Process to smooth out the cost landscape.
 
 \begin{algorithm}
     \caption{Bayesian Optimization}
@@ -158,13 +160,13 @@ Bayesian Optimization uses an aquisition function that operates on a gaussian pr
 \end{algorithm}
 
 \subsection{What is MPC?}
-MPC is an acronym for model predicive control.
+MPC is an acronym for model predictive control.
 It replaces classical control algorithms that usually work in an offline manner with an optimizer, that solves the optimal control problem for a receding horizon (Figure \ref{fig:mpc}).
 Each action taken is the first action of the optimal control plan.
 The plan gets updated continuously (Figure \ref{fig:mpc_plan}), this is called receding horizon approach.
 
 \begin{figure}[h]
-    \caption{Blockdiagram of MPC algorithm}
+    \caption{Block-diagram of MPC algorithm}
     \centering
     \includegraphics[width=0.45\textwidth]{fig_mpc.pdf}
     \label{fig:mpc}
@@ -200,7 +202,7 @@ We use a kinematic bicycle model defined by algorithm \ref{alg:kbm} and \ref{alg
 \begin{algorithm}
     \caption{Update Bicycle Model}
     \label{alg:ubm}
-    \begin{algorithmic}
+    \begin{algorithmic}[1]
         \State $\dot{v} \gets a$
         \State $\dot{x_c} \gets v * \cos{(\theta + \beta)}$
         \State $\dot{y_c} \gets v * \sin{(\theta + \beta)}$
@@ -210,17 +212,17 @@ We use a kinematic bicycle model defined by algorithm \ref{alg:kbm} and \ref{alg
     \end{algorithmic}
 \end{algorithm}
 
-\section{Literatur review}
+\section{Literature review}
 In Multi-Objective Optimization of a Path-following MPC for Vehicle Guidance \cite{gharib2021multi} BO is used to weight error terms to find the ratio results in the best reference tracking performance of a complex vehicle model in a simulation. Using BO with expected improvement as acquisition function. They found the BO algorithm used to be more efficient then random search when comparing the number of evaluations needed to find satisfactory results.
 
-Lukas Hewing and colaborators \cite{hewing2018cautious} explored the use of BO to decrease model missmatch. They learned a dynamics model of a miniature race car using a gaussian process from real data, while the vehicle is controlled through MPC. They experimented with sparse approximations to gaussian processes to use them in real-time applications.
+Lukas Hewing and collaborators \cite{hewing2018cautious} explored the use of BO to decrease model mismatch. They learned a dynamics model of a miniature race car using a gaussian process from real data, while the vehicle is controlled through MPC. They experimented with sparse approximations to gaussian processes to use them in real-time applications.
 
-Lu Qiugang and colaborators \cite{lu2020mpc} explored MPC parameter tuning in HVAC plants. They had good results and with limited evaluations. They used upper confidence bound as acquisition function and also had two tuning parameters. The experiment setup is similar to the one used in this paper.
+Lu Qiugang and collaborators \cite{lu2020mpc} explored MPC parameter tuning in HVAC plants. They had good results and with limited evaluations. They used upper confidence bound as acquisition function and also had two tuning parameters. The experiment setup is similar to the one used in this paper.
 
 
 \section{Experiments}
 
-In this paper we explore two uses of BO in the MPC context. First we try to find the optimal ratio between input (accelaration and steering angle rate) cost and reference tracking ($x - x_{ref}$ and $y - y_{ref}$). Secondly we try to find vehicle specific parameters using BO.
+In this paper we explore two uses of BO in the MPC context. First we try to find the optimal ratio between input (acceleration and steering angle rate) cost and reference tracking ($x - x_{ref}$ and $y - y_{ref}$). Secondly we try to find vehicle specific parameters using BO.
 
 \subsection{Experiment setup}
 
@@ -240,7 +242,7 @@ We explore two uses of BO for MPC. Firstly we try to find the optimal ratio of i
     \label{fig:l_value_experiment}
 \end{figure}
 
-We used a standard MPC implementation that uses the cost function that is specified here (Alg. \ref{alg:cost_function}). We use scipys SLSQP optimizer to minimize the cost function.
+We used a standard MPC implementation that uses the cost function that is specified here (Alg. \ref{alg:cost_function}). We use scipy's SLSQP optimizer to minimize the cost function.
 \begin{algorithm}
     \caption{Cost function}
     \label{alg:cost_function}
@@ -299,7 +301,7 @@ We found that the optimum ratio for all tested vehicles all with a length of $2m
 
 \subsection{Finding Vehicle parameters using BO}
 
-We aim to find the vehicle specific parameters $L_f$ and $L_r$ using BO. We try multiple parameters and different aquisition functions. Since evaluating $40$ tracks still lead to noisy cost we need to choose a suitable exploration-exploitation parameter in our acquisition function. For Expected Improvement \ref{alg:ei} and Probability of Improvement \ref{alg:poi} a $\xi = 0.5$ worked the best. For Upper Confidence Bound a $\kappa=2.576$ worked the best. Increasing the regularization $\alpha$ parameter of the internal GP for BO to $0.1$ improved performance.
+We aim to find the vehicle specific parameters $L_f$ and $L_r$ using BO. We try multiple parameters and different acquisition functions. Since evaluating $40$ tracks still lead to noisy cost we need to choose a suitable exploration-exploitation parameter in our acquisition function. For Expected Improvement \ref{alg:ei} and Probability of Improvement \ref{alg:poi} a $\xi = 0.5$ worked the best. For Upper Confidence Bound a $\kappa=2.576$ worked the best. Increasing the regularization $\alpha$ parameter of the internal GP for BO to $0.1$ improved performance.
 
 \begin{figure}[h]
     \caption{Mean of GP from L-parameter search (Target $L_f = 0.8$ $L_r = 1.2$)}
@@ -309,11 +311,11 @@ We aim to find the vehicle specific parameters $L_f$ and $L_r$ using BO. We try 
 \end{figure}
 
 \section{Conclusion and further research}
-There is no general ratio between input and reference cost. It depends on vehicle dynamics vehicle parameters and the specific MPC implementation. The optimal ratio are still similar and close to $0.002$ with our experiment. Therefore finetuning is still required and using many different reference tracks, leads to better results.\\
+There is no general ratio between input and reference cost. It depends on vehicle dynamics vehicle parameters and the specific MPC implementation. The optimal ratio are still similar and close to $0.002$ with our experiment. Therefore fine tuning is still required and using many different reference tracks, leads to better results.
 
-Finding the vehicle parameters works well using BO if you tweak the BO parameter for exploration and exploitation tradeoff and set the regularization parameter of the internal GP for the BO to a suitable value.\\
+Finding the vehicle parameters works well using BO if you tweak the BO parameter for exploration and exploitation tradeoff and set the regularization parameter of the internal GP for the BO to a suitable value. Since we only estimated two parameters in our experiment using BO in this case was not helpful.
 
-In further reseach we would use a more suffisticated MPC since using the SLSQP optimizer from python does not work well for some states. It would also be interesting to try to find more vehicle parameters. Also we would like to try if the BO approach works on real hardware or using one simple and one complex vehicle model this could also be done in simulation by using different vehicle models for the controller and the simulation. In this paper we always measure the current vehicle position and update this inside the controller therefore measuring more or less vehicle states and the effects on the optimization performance would be interesting. To translate this approach to a real vehicle you would need to add uncertency to measurents and to the model.
+In further research we would use a more sophisticated MPC since using the SLSQP optimizer from python does not work well for some states. It would also be interesting to try to find more vehicle parameters. Also we would like to try if the BO approach works on real hardware or using one simple and one complex vehicle model this could also be done in simulation by using different vehicle models for the controller and the simulation. In this paper we always measure the current vehicle position and update this inside the controller therefore measuring more or less vehicle states and the effects on the optimization performance would be interesting. To translate this approach to a real vehicle you would need to add uncertainly to measurements and to the model.
 
 \bibliographystyle{plain}
 \bibliography{refs.bib}

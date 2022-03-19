@@ -87,7 +87,7 @@
 \date{\today} % Leave empty to omit a date
 \renewcommand{\maketitlehookd}{%
 \begin{abstract}
-\noindent When using MPC to control a vehicle it is often necessary to fine tune control and vehicle parameters to get good performance in reality. This is a time consuming process that often relies on trial and error or grid search of the parameter space. In this paper we evaluate the use of Bayesian Optimization to tackle this problem. We simulate vehicle dynamics of a simple bicycle model with two parameters. We try to find the MPC cost ratios and real vehicle parameters by optimizing controller performance with different parameters using Bayesian Optimization.
+\noindent When using MPC to control a vehicle it is often necessary to fine tune model parameters and control costs to get good performance in reality. This is a time consuming process that often relies on trial and error or grid search of the parameter space. In this paper we evaluate the use of Bayesian Optimization to tackle this problem. We simulate vehicle dynamics of a simple bicycle model with two model parameters. We try to find the MPC cost matrices and real vehicle parameters by optimizing controller performance with different parameters using Bayesian Optimization.
 \end{abstract}
 }
 
@@ -104,8 +104,7 @@
 
 \section{Introduction}
 
-\lettrine[nindent=0em,lines=3]{W} e start by introducing bayesian optimization and MPC on a high level.
-This is done to let you know what I understand when talking about these algorithms.
+\lettrine[nindent=0em,lines=3]{W}  hen using Model Predictive Control (MPC) to solve a problem a lot of fine tuning and calibration needs to be done for an algorithm to work on a plant. Assuming the popular quadratic cost function the cost matrices for input and state of the model need to be chosen. Many models also have parameters that represent physical aspects of the plant for best performance the model parameters need to match the plant. In many cases the model is a simplification of the plant, therefore multiple physical features may influence the optimal parameters of the model and can't be easily measured. In the design process of a MPC-controller the selection of optimal parameters and cost matrices needs deep understanding of the plant and time for manual tuning of the variables. In this paper we explore to use of Bayesian Optimization (BO) for the optimal selection of cost matrices and model parameters using a simulated bicycle vehicle.
 
 \subsection{What is Bayesian Optimization?}
 Bayesian optimization is a strategy for global optimization of black-box functions. (Alg. \ref{alg:bo})
@@ -160,8 +159,7 @@ Bayesian Optimization uses an acquisition function that operates on a gaussian p
 \end{algorithm}
 
 \subsection{What is MPC?}
-MPC is an acronym for model predictive control.
-It replaces classical control algorithms that usually work in an offline manner with an optimizer, that solves the optimal control problem for a receding horizon (Figure \ref{fig:mpc}).
+MPC replaces classical control algorithms that usually work in an offline manner with an optimizer, that solves the optimal control problem for a receding horizon (Figure \ref{fig:mpc}).
 Each action taken is the first action of the optimal control plan.
 The plan gets updated continuously (Figure \ref{fig:mpc_plan}), this is called receding horizon approach.
 
